@@ -3,7 +3,9 @@
 #
 find_package(Doxygen)
 
-if (DOXYGEN_FOUND)
+if(${CMAKE_VERSION} VERSION_LESS "3.9.0")
+    message(WARNING "You need CMake version >= 3.9.0 if you want to support Doxygen")
+elseif(DOXYGEN_FOUND)
     set(DOXYGEN_PROJECT_NAME ${APPLICATION_NAME})
     set(DOXYGEN_PROJECT_NUMBER ${APPLICATION_VERSION})
     set(DOXYGEN_PROJECT_BRIEF "Unit testing library with mock support")
@@ -38,4 +40,4 @@ if (DOXYGEN_FOUND)
                      ${cmocka-library_SOURCE_DIR}
                      ${cmocka-headers_SOURCE_DIR}
                      ${CMAKE_CURRENT_SOURCE_DIR})
-endif(DOXYGEN_FOUND)
+endif(${CMAKE_VERSION} VERSION_LESS "3.9.0")

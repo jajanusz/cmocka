@@ -12,7 +12,7 @@ target_link_libraries(uptime proc_uptime)
 
 add_executable(test_uptime test_uptime.c)
 target_compile_options(test_uptime PRIVATE ${DEFAULT_C_COMPILE_FLAGS})
-target_link_libraries(test_uptime ${CMOCKA_SHARED_LIBRARY})
+target_link_libraries(test_uptime ${CMOCKA_LIBRARY})
 
 set_target_properties(test_uptime
     PROPERTIES

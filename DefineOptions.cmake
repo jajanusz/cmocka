@@ -1,4 +1,5 @@
 option(WITH_STATIC_LIB "Build with a static library" OFF)
+option(WITH_SHARED_LIB "Build with a shared library" ON)
 option(WITH_CMOCKERY_SUPPORT "Install a cmockery header" OFF)
 option(UNIT_TESTING "Build with unit testing" OFF)
 option(PICKY_DEVELOPER "Build with picky developer flags" OFF)

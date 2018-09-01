@@ -12,10 +12,12 @@ set(CMOCKA_PRIVATE_INCLUDE_DIRS
     ${cmocka_BINARY_DIR}
 )
 
-set(CMOCKA_SHARED_LIBRARY
-    cmocka_shared
-    CACHE INTERNAL "cmocka shared library"
-)
+if (WITH_SHARED_LIB)
+    set(CMOCKA_SHARED_LIBRARY
+        cmocka_shared
+        CACHE INTERNAL "cmocka shared library"
+    )
+endif (WITH_SHARED_LIB)
 
 if (WITH_STATIC_LIB)
     set(CMOCKA_STATIC_LIBRARY
@@ -50,36 +52,38 @@ if (CMOCKA_PLATFORM_INCLUDE)
     add_definitions(-DCMOCKA_PLATFORM_INCLUDE=1)
 endif()
 
-add_library(${CMOCKA_SHARED_LIBRARY} SHARED ${cmocka_SRCS})
-target_compile_options(${CMOCKA_SHARED_LIBRARY} PRIVATE ${DEFAULT_C_COMPILE_FLAGS})
-target_link_libraries(${CMOCKA_SHARED_LIBRARY} ${CMOCKA_LINK_LIBRARIES})
-set_target_properties(
-    ${CMOCKA_SHARED_LIBRARY}
-        PROPERTIES
-            OUTPUT_NAME
-                cmocka
-            DEFINE_SYMBOL
-                CMOCKA_EXPORTS
-)
-
-if (NOT WIN32)
+if (WITH_SHARED_LIB)
+    add_library(${CMOCKA_SHARED_LIBRARY} SHARED ${cmocka_SRCS})
+    target_compile_options(${CMOCKA_SHARED_LIBRARY} PRIVATE ${DEFAULT_C_COMPILE_FLAGS})
+    target_link_libraries(${CMOCKA_SHARED_LIBRARY} ${CMOCKA_LINK_LIBRARIES})
     set_target_properties(
         ${CMOCKA_SHARED_LIBRARY}
             PROPERTIES
-                VERSION
-                    ${LIBRARY_VERSION}
-                SOVERSION
-                    ${LIBRARY_SOVERSION}
+                OUTPUT_NAME
+                    cmocka
+                DEFINE_SYMBOL
+                    CMOCKA_EXPORTS
     )
-endif (NOT WIN32)
 
-install(
-    TARGETS ${CMOCKA_SHARED_LIBRARY}
-    RUNTIME DESTINATION ${BIN_INSTALL_DIR}
-    LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-    ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-    COMPONENT libraries
-)
+    if (NOT WIN32)
+        set_target_properties(
+            ${CMOCKA_SHARED_LIBRARY}
+                PROPERTIES
+                    VERSION
+                        ${LIBRARY_VERSION}
+                    SOVERSION
+                        ${LIBRARY_SOVERSION}
+        )
+    endif (NOT WIN32)
+
+    install(
+        TARGETS ${CMOCKA_SHARED_LIBRARY}
+        RUNTIME DESTINATION ${BIN_INSTALL_DIR}
+        LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+        ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
+        COMPONENT libraries
+    )
+endif (WITH_SHARED_LIB)
 
 if (WITH_STATIC_LIB)
     add_library(${CMOCKA_STATIC_LIBRARY} STATIC ${cmocka_SRCS})
@@ -112,19 +116,21 @@ if (WITH_STATIC_LIB)
     )
 endif (WITH_STATIC_LIB)
 
-if (WIN32)
-    if (POLICY CMP0026)
-        cmake_policy(SET CMP0026 OLD)
+if (WITH_SHARED_LIB)
+    if (WIN32)
+        if (POLICY CMP0026)
+            cmake_policy(SET CMP0026 OLD)
+        endif()
+
+    #
+    # In order to run tests we will need to set the approriate environment
+    # variable so that the test program can locate its dependent DLL's. First
+    # we want to know what directory our dependent DLL was installed into:
+    #
+        get_target_property(_cmocka_dir cmocka_shared LOCATION_${CMOCKA_BUILD_TYPE})
+        get_filename_component(_cmocka_path "${_cmocka_dir}" PATH)
+        file(TO_NATIVE_PATH "${_cmocka_path}" _cmocka_path_native)
+
+        set(CMOCKA_DLL_PATH "${_cmocka_path_native}" PARENT_SCOPE)
     endif()
-
-#
-# In order to run tests we will need to set the approriate environment
-# variable so that the test program can locate its dependent DLL's. First
-# we want to know what directory our dependent DLL was installed into:
-#
-    get_target_property(_cmocka_dir cmocka_shared LOCATION_${CMOCKA_BUILD_TYPE})
-    get_filename_component(_cmocka_path "${_cmocka_dir}" PATH)
-    file(TO_NATIVE_PATH "${_cmocka_path}" _cmocka_path_native)
-
-    set(CMOCKA_DLL_PATH "${_cmocka_path_native}" PARENT_SCOPE)
-endif()
+endif (WITH_SHARED_LIB)
